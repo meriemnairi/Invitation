@@ -34,6 +34,12 @@ const sectionOrder: SectionKey[] = [
   "footer",
 ];
 
+const publicAssets = {
+  heroBackground: "/bg.png",
+  detailBorder: "/border.png",
+  programCake: "/cake.png",
+} as const;
+
 const getRevealStyles = (
   section: SectionKey,
   visibleSections: Record<SectionKey, boolean>,
@@ -357,7 +363,11 @@ const Invitation = () => {
                   ...getRevealStyles("program", visibleSections, 2),
                 }}
               >
-                <img src="/cake.png" alt="Cake" style={styles.programImage} />
+                <img
+                  src={publicAssets.programCake}
+                  alt="Cake"
+                  style={styles.programImage}
+                />
               </div>
 
               <div
@@ -459,7 +469,7 @@ const styles: Record<string, CSSProperties> = {
     position: "relative",
     width: "100%",
     minHeight: "720px",
-    backgroundImage: "url('/bg.png')",
+    backgroundImage: `url('${publicAssets.heroBackground}')`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     display: "flex",
@@ -658,7 +668,7 @@ const styles: Record<string, CSSProperties> = {
     maxWidth: "360px",
     margin: "0 auto",
     padding: "40px 26px 30px",
-    backgroundImage: "url('/border.png')",
+    backgroundImage: `url('${publicAssets.detailBorder}')`,
     backgroundRepeat: "no-repeat",
     backgroundSize: "100% 100%",
     backgroundPosition: "center",

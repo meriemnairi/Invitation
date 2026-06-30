@@ -181,6 +181,8 @@ const Invitation = () => {
   const audioStartedRef = useRef(false);
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft());
   const [isMuted, setIsMuted] = useState(false);
+  const [showAudioHint, setShowAudioHint] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
   const [photosAlbumUrl, setPhotosAlbumUrl] = useState(
     "https://photos.app.goo.gl/eu9gacQ3PGd9p2Hj9",
@@ -262,50 +264,35 @@ const Invitation = () => {
     return () => timers.forEach(window.clearTimeout);
   }, []);
 
+  // Keep the <audio> element's muted state in sync with isMuted.
+  // No autoplay attempts here — playback only ever starts from an
+  // explicit tap on the "Tap to start music" button (see startMusic).
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
     audio.muted = isMuted;
-
-    const tryPlay = async () => {
-      try {
-        audio.volume = 0.25;
-        if (!audioStartedRef.current) {
-          audio.currentTime = 0;
-          audioStartedRef.current = true;
-        }
-        await audio.play();
-      } catch {
-        window.setTimeout(() => {
-          void tryPlay();
-        }, 250);
-      }
-    };
-
-    const handleInteraction = () => {
-      if (!audioStartedRef.current) {
-        void tryPlay();
-      }
-    };
-
-    void tryPlay();
-    window.requestAnimationFrame(() => {
-      void tryPlay();
-    });
-
-    window.addEventListener("pointerdown", handleInteraction, { once: false });
-    window.addEventListener("keydown", handleInteraction, { once: false });
-    window.addEventListener("touchstart", handleInteraction, { once: false });
-    window.addEventListener("scroll", handleInteraction, { once: true });
-
-    return () => {
-      window.removeEventListener("pointerdown", handleInteraction);
-      window.removeEventListener("keydown", handleInteraction);
-      window.removeEventListener("touchstart", handleInteraction);
-      window.removeEventListener("scroll", handleInteraction);
-    };
   }, [isMuted]);
+
+  const startMusic = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      audio.volume = 0.25;
+      audio.muted = false;
+      audio.currentTime = 0;
+      audio.loop = true;
+      await audio.play();
+      audioStartedRef.current = true;
+      setIsMuted(false);
+      setHasInteracted(true);
+      setShowAudioHint(false);
+    } catch {
+      // Playback was blocked (e.g. browser restriction) — keep the
+      // "Tap to start music" hint visible so the user can try again.
+      audioStartedRef.current = false;
+    }
+  };
 
   const toggleMute = () => {
     const audio = audioRef.current;
@@ -314,6 +301,17 @@ const Invitation = () => {
     audio.muted = !audio.muted;
     setIsMuted(audio.muted);
   };
+
+  const handleAudioControlClick = () => {
+    if (!audioStartedRef.current) {
+      void startMusic();
+      return;
+    }
+
+    toggleMute();
+  };
+
+  const showTapHint = showAudioHint && !hasInteracted;
 
   const mapsUrl =
     "https://www.google.com/maps/place/Dar+Bouraoui+Carthage/@36.8615973,10.3132932,16z/data=!3m1!4b1!4m6!3m5!1s0x12e2b5fe656929fd:0x3129acb730236568!8m2!3d36.861593!4d10.3158681!16s%2Fg%2F11fqtwc768?entry=ttu&g_ep=EgoyMDI2MDYyNC4wIKXMDSoASAFQAw%3D%3D";
@@ -354,7 +352,6 @@ const Invitation = () => {
       <audio
         ref={audioRef}
         src="/music.mp3"
-        autoPlay
         loop
         preload="auto"
         style={{ display: "none" }}
@@ -413,9 +410,9 @@ const Invitation = () => {
             bottom: 8px !important;
             max-width: calc(100vw - 16px) !important;
             padding: 4px !important;
-            flex-direction: row !important;
-            gap: 4px !important;
-            align-items: center !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            align-items: flex-end !important;
           }
           .language-switcher {
             max-width: 100% !important;
@@ -432,6 +429,7 @@ const Invitation = () => {
           .countdown-separator { margin: 12px 0 0 !important; }
           .rsvp-container { padding: 30px 20px !important; }
           .hero-section { min-height: 700px !important; }
+          .audio-hint { display: flex !important; }
           .program-section-wrapper {
             grid-template-columns: 1fr !important;
             gap: 24px !important;
@@ -448,9 +446,12 @@ const Invitation = () => {
           }
           .couple-names {
             white-space: normal !important;
-            font-size: clamp(2.8rem, 12vw, 5.5rem) !important;
-            max-width: 90vw !important;
-            line-height: 1.1 !important;
+            font-size: clamp(3.5rem, 16vw, 6.5rem) !important;
+            margin: 0 !important;
+          }
+          .hero-section .couple-names-container {
+            flex-direction: column !important;
+            gap: 0 !important;
           }
           h2 {
             font-size: clamp(1.8rem, 6vw, 3.2rem) !important;
@@ -462,13 +463,35 @@ const Invitation = () => {
         <div style={styles.controls} className="controls">
           <button
             type="button"
-            onClick={toggleMute}
+            className="audio-hint"
+            onClick={handleAudioControlClick}
             aria-label={
-              isMuted ? currentCopy.unmuteLabel : currentCopy.muteLabel
+              showTapHint
+                ? "Tap to start music"
+                : isMuted
+                  ? currentCopy.unmuteLabel
+                  : currentCopy.muteLabel
             }
-            style={styles.muteButton}
+            style={{
+              ...styles.muteButton,
+              ...(showTapHint ? styles.audioHint : {}),
+            }}
           >
-            {isMuted ? (
+            {showTapHint ? (
+              <>
+                <svg
+                  viewBox="0 0 24 24"
+                  style={styles.tapHintIcon}
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 9.5v5h3.5l4.5 3.5V6L7.5 9.5H4Zm9.3 0.7a3.9 3.9 0 0 1 0 4.6 1.1 1.1 0 0 0 1.8 1.2 5.9 5.9 0 0 0 0-7.1 1.1 1.1 0 0 0-1.8 1.2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                Tap to start music
+              </>
+            ) : isMuted ? (
               <svg viewBox="0 0 24 24" style={styles.icon} aria-hidden="true">
                 <path
                   d="M4 9.5v5h3.5l4.5 3.5V6L7.5 9.5H4Zm11.4 1.2 1.2-1.2-1.2-1.2 1.2-1.2 1.2 1.2 1.2-1.2 1.2 1.2-1.2 1.2 1.2 1.2-1.2 1.2-1.2-1.2-1.2 1.2-1.2-1.2Z"
@@ -540,15 +563,38 @@ const Invitation = () => {
               >
                 {currentCopy.heroSubtitle}
               </p>
-              <h1
-                style={{
-                  ...styles.coupleNames,
-                  ...getHeroPartStyle(2, heroStage, 0, "name"),
-                }}
-                className="couple-names"
+              <div
+                style={styles.coupleNamesContainer}
+                className="couple-names-container"
               >
-                Hichem &amp; Oumayma
-              </h1>
+                <h1
+                  style={{
+                    ...styles.coupleNames,
+                    ...getHeroPartStyle(2, heroStage, 0, "name"),
+                  }}
+                  className="couple-names"
+                >
+                  Hichem
+                </h1>
+                <h1
+                  style={{
+                    ...styles.coupleNames,
+                    ...getHeroPartStyle(2, heroStage, 0, "name"),
+                  }}
+                  className="couple-names"
+                >
+                  &amp;
+                </h1>
+                <h1
+                  style={{
+                    ...styles.coupleNames,
+                    ...getHeroPartStyle(2, heroStage, 0, "name"),
+                  }}
+                  className="couple-names"
+                >
+                  Oumayma
+                </h1>
+              </div>
               <p
                 style={{
                   ...styles.heroSubtitle,
@@ -1004,6 +1050,13 @@ const styles: Record<string, CSSProperties> = {
     letterSpacing: "0.05em",
     textShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
   },
+  coupleNamesContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: "16px",
+    justifyContent: "center",
+  },
   heroSubtitle: {
     fontSize: "0.9rem",
     color: "rgba(255, 255, 255, 0.95)",
@@ -1458,6 +1511,35 @@ const styles: Record<string, CSSProperties> = {
     color: "#5a4a47",
     fontWeight: "500",
     letterSpacing: "0.02em",
+  },
+  audioHint: {
+    position: "relative",
+    border: "1px solid rgba(90, 74, 71, 0.14)",
+    borderRadius: "999px",
+    width: "auto",
+    height: "32px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    backgroundColor: "rgba(255, 250, 247, 0.32)",
+    backdropFilter: "blur(12px)",
+    color: "rgba(90, 74, 71, 0.9)",
+    fontSize: "0.66rem",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    boxShadow: "0 6px 18px rgba(90, 74, 71, 0.06)",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    padding: "0 14px",
+    lineHeight: 1,
+  },
+  tapHintIcon: {
+    width: "14px",
+    height: "14px",
+    display: "block",
+    flexShrink: 0,
   },
   controls: {
     position: "fixed",

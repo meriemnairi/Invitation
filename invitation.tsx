@@ -178,6 +178,7 @@ const getRevealStyles = (
 
 const Invitation = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioStartedRef = useRef(false);
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft());
   const [isMuted, setIsMuted] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
@@ -270,7 +271,10 @@ const Invitation = () => {
     const tryPlay = async () => {
       try {
         audio.volume = 0.25;
-        audio.currentTime = 0;
+        if (!audioStartedRef.current) {
+          audio.currentTime = 0;
+          audioStartedRef.current = true;
+        }
         await audio.play();
       } catch {
         window.setTimeout(() => {
@@ -280,7 +284,9 @@ const Invitation = () => {
     };
 
     const handleInteraction = () => {
-      void tryPlay();
+      if (!audioStartedRef.current) {
+        void tryPlay();
+      }
     };
 
     void tryPlay();
@@ -423,7 +429,7 @@ const Invitation = () => {
           .countdown-item { flex: 1 1 0 !important; min-width: 0 !important; padding: 8px 4px !important; }
           .countdown-separator { margin: 12px 0 0 !important; }
           .rsvp-container { padding: 30px 20px !important; }
-          .hero-section { min-height: 600px !important; }
+          .hero-section { min-height: 700px !important; }
           .program-section-wrapper {
             grid-template-columns: 1fr !important;
             gap: 24px !important;

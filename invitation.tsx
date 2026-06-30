@@ -297,11 +297,13 @@ const Invitation = () => {
     window.addEventListener("pointerdown", handleInteraction, { once: false });
     window.addEventListener("keydown", handleInteraction, { once: false });
     window.addEventListener("touchstart", handleInteraction, { once: false });
+    window.addEventListener("scroll", handleInteraction, { once: true });
 
     return () => {
       window.removeEventListener("pointerdown", handleInteraction);
       window.removeEventListener("keydown", handleInteraction);
       window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("scroll", handleInteraction);
     };
   }, [isMuted]);
 
@@ -445,8 +447,10 @@ const Invitation = () => {
             padding: 0 !important;
           }
           .couple-names {
-            white-space: nowrap !important;
-            font-size: clamp(2.2rem, 9vw, 4.2rem) !important;
+            white-space: normal !important;
+            font-size: clamp(2.8rem, 12vw, 5.5rem) !important;
+            max-width: 90vw !important;
+            line-height: 1.1 !important;
           }
           h2 {
             font-size: clamp(1.8rem, 6vw, 3.2rem) !important;

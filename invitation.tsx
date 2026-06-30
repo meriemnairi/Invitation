@@ -137,21 +137,17 @@ const getHeroPartStyle = (
   variant: "subtitle" | "name" | "date" = "subtitle",
 ): CSSProperties => {
   const isVisible = currentStage >= stage;
-  const offset = variant === "name" ? 64 : 40;
-  const rotate = variant === "name" ? "-2deg" : "0deg";
   const duration = 1100;
   const backgroundClearTime = 2100;
-  const textStartDelay = backgroundClearTime + (stage - 1) * 360;
+  const textStartDelay = backgroundClearTime + (stage - 1) * 420;
   const totalDelay = delay + textStartDelay;
 
   return {
     opacity: isVisible ? 1 : 0,
-    transform: isVisible
-      ? "translateY(0) scale(1) rotate(0deg)"
-      : `translateY(${offset}px) scale(0.94) rotate(${rotate})`,
+    transform: "translateY(0) scale(1) rotate(0deg)",
     filter: isVisible ? "blur(0px)" : "blur(10px)",
-    transition: `opacity ${duration}ms ${animationConfig.easing} ${totalDelay}ms, transform ${duration}ms ${animationConfig.easing} ${totalDelay}ms, filter ${duration}ms ${animationConfig.easing} ${totalDelay}ms`,
-    willChange: "opacity, transform, filter",
+    transition: `opacity ${duration}ms ${animationConfig.easing} ${totalDelay}ms, filter ${duration}ms ${animationConfig.easing} ${totalDelay}ms`,
+    willChange: "opacity, filter",
   };
 };
 
@@ -274,9 +270,12 @@ const Invitation = () => {
     const tryPlay = async () => {
       try {
         audio.volume = 0.25;
+        audio.currentTime = 0;
         await audio.play();
       } catch {
-        // Autoplay may be blocked until the user interacts with the page.
+        window.setTimeout(() => {
+          void tryPlay();
+        }, 250);
       }
     };
 
@@ -285,17 +284,20 @@ const Invitation = () => {
     };
 
     void tryPlay();
+    window.requestAnimationFrame(() => {
+      void tryPlay();
+    });
 
-    window.addEventListener("pointerdown", handleInteraction, { once: true });
-    window.addEventListener("keydown", handleInteraction, { once: true });
-    window.addEventListener("touchstart", handleInteraction, { once: true });
+    window.addEventListener("pointerdown", handleInteraction, { once: false });
+    window.addEventListener("keydown", handleInteraction, { once: false });
+    window.addEventListener("touchstart", handleInteraction, { once: false });
 
     return () => {
       window.removeEventListener("pointerdown", handleInteraction);
       window.removeEventListener("keydown", handleInteraction);
       window.removeEventListener("touchstart", handleInteraction);
     };
-  }, []);
+  }, [isMuted]);
 
   const toggleMute = () => {
     const audio = audioRef.current;
@@ -509,10 +511,7 @@ const Invitation = () => {
               sectionRefs.current.hero = node;
             }}
             data-section="hero"
-            style={{
-              ...styles.heroSection,
-              ...getRevealStyles("hero", visibleSections, 0, true),
-            }}
+            style={styles.heroSection}
             className="section-hero hero-section"
           >
             <div
@@ -726,7 +725,7 @@ const Invitation = () => {
               <div
                 style={{
                   ...styles.detailCardRow,
-                  marginTop: "25px",
+                  marginTop: "35px",
                   ...getRevealStyles("details", visibleSections, 3),
                 }}
               >
@@ -765,6 +764,7 @@ const Invitation = () => {
               <div
                 style={{
                   ...styles.detailCardRow,
+                  marginBottom: "35px",
                   ...getRevealStyles("details", visibleSections, 4),
                 }}
               >
@@ -943,7 +943,6 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    animation: "heroPulse 18s ease-in-out infinite",
   },
   heroBackground: {
     position: "absolute",
@@ -1336,7 +1335,7 @@ const styles: Record<string, CSSProperties> = {
   },
   detailCardRow: {
     display: "grid",
-    gap: "3px",
+    gap: "1px",
     alignItems: "center",
     justifyItems: "center",
   },
@@ -1394,7 +1393,7 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: "0 10px 24px rgba(123, 75, 47, 0.22)",
     transition: "transform 180ms ease, box-shadow 180ms ease",
     animation: "floatLift 2.4s ease-in-out infinite",
-    marginTop: "12px",
+    marginTop: "15px",
   },
   divider: {
     width: "100%",
@@ -1437,7 +1436,7 @@ const styles: Record<string, CSSProperties> = {
   },
 
   footer: {
-    padding: "5px 14px",
+    padding: "20px 14px",
     textAlign: "center",
     backgroundColor: "#f5ede8",
     borderTop: "1px solid #e8dcd8",
@@ -1445,7 +1444,7 @@ const styles: Record<string, CSSProperties> = {
     marginTop: "0",
   },
   footerText: {
-    fontSize: "0.65rem",
+    fontSize: "0.75rem",
     color: "#5a4a47",
     fontWeight: "500",
     letterSpacing: "0.02em",

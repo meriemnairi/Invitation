@@ -24,6 +24,7 @@ type SectionKey =
   | "photo"
   | "program"
   | "gift"
+  | "upload"
   | "footer";
 
 const sectionOrder: SectionKey[] = [
@@ -33,6 +34,7 @@ const sectionOrder: SectionKey[] = [
   "details",
   "program",
   "gift",
+  "upload",
   "footer",
 ];
 
@@ -64,7 +66,8 @@ const translations = {
     countdownNote:
       "When the countdown ends and the wedding day begins, you can upload your photos and treasured moments from the celebration right here.",
     uploadHeading: "Share your memories",
-    uploadDescription: "Choose where you want to add your memories.",
+    uploadDescription:
+      "As we celebrate our special day, we'd love to see it through your eyes. Share your favorite photos and cherished memories from the preparations, ceremony, and celebration with us.",
     photosButtonLabel: "Upload photos here",
     videosButtonLabel: "Upload videos here",
     detailsHeading: "Details",
@@ -75,13 +78,13 @@ const translations = {
     dateText: ["August 1, 2026", "From 6:00 PM to 9:00 PM"],
     programHeading: "Program",
     programItems: [
-      { time: "18:00", title: "Guests welcome" },
-      { time: "18:30", title: "Fatiha ceremony and Aqd" },
-      { time: "19:30", title: "Dinner, dancing, and sweets" },
-      { time: "20:30", title: "Photo session with the couple" },
+      { time: "18:00", title: "Welcoming Our Guests" },
+      { time: "18:30", title: "The Fatiha & Aqd Ceremony" },
+      { time: "19:30", title: "Celebration & Sweet Delights" },
+      { time: "20:30", title: "Capturing Memories with the Newlyweds" },
     ],
     giftText:
-      "Be present at our wedding, it is the most beautiful gift you can give us!",
+      "Your presence on our special day is the greatest gift we could ask for.",
     footerText: "© 2026 Hichem & Oumayma • All rights reserved",
     muteLabel: "Mute music",
     unmuteLabel: "Unmute music",
@@ -97,9 +100,10 @@ const translations = {
     countdownNote:
       "Une fois le compte à rebours terminé et le jour J, vous pourrez déposer toutes les photos et moments de la célébration ici.",
     uploadHeading: "Partagez vos souvenirs",
-    uploadDescription: "Choisissez où vous souhaitez ajouter vos souvenirs.",
-    photosButtonLabel: "Téléverser les photos ici",
-    videosButtonLabel: "Téléverser les vidéos ici",
+    uploadDescription:
+      "En ce jour si spécial, nous serions heureux de le découvrir à travers vos yeux. Partagez avec nous vos plus belles photos et vos précieux souvenirs des préparatifs, de la cérémonie et de la célébration.",
+    photosButtonLabel: "Ajouter les photos ici",
+    videosButtonLabel: "Ajouter les vidéos ici",
     detailsHeading: "Détails",
     locationLabel: "Lieu",
     dateLabel: "Date",
@@ -108,13 +112,16 @@ const translations = {
     dateText: ["1 août 2026", "De 18:00 à 21:00"],
     programHeading: "Déroulé de la soirée",
     programItems: [
-      { time: "18:00", title: "Accueil des invités" },
-      { time: "18:30", title: "Cérémonie de la fatiha et de l’Aqad" },
-      { time: "19:30", title: "Dîner, danse et douceurs" },
-      { time: "20:30", title: "Séance photos avec les mariés" },
+      { time: "18:00", title: "Accueil de nos invités" },
+      { time: "18:30", title: "Cérémonie de la Fatiha et Akd" },
+      { time: "19:30", title: "Célébration et douceurs" },
+      {
+        time: "20:30",
+        title: "Immortaliser ces précieux instants avec les mariés",
+      },
     ],
     giftText:
-      "Soyez présents à notre mariage, c'est le plus beau cadeau que vous puissiez nous faire !",
+      "Votre présence à nos côtés en ce jour si spécial est le plus beau cadeau que nous puissions recevoir.",
     footerText: "© 2026 Hichem & Oumayma • Tous droits réservés",
     muteLabel: "Couper le son",
     unmuteLabel: "Réactiver le son",
@@ -200,6 +207,7 @@ const Invitation = () => {
     photo: false,
     program: false,
     gift: false,
+    upload: false,
     footer: true,
   });
   const [heroStage, setHeroStage] = useState(0);
@@ -210,6 +218,7 @@ const Invitation = () => {
     photo: null,
     program: null,
     gift: null,
+    upload: null,
     footer: null,
   });
 
@@ -272,6 +281,29 @@ const Invitation = () => {
     if (!audio) return;
     audio.muted = isMuted;
   }, [isMuted]);
+
+  // Auto-start music on desktop after hero animations complete or on first scroll
+  useEffect(() => {
+    const autoStartMusicOnScroll = () => {
+      if (!audioStartedRef.current) {
+        void startMusic();
+      }
+      window.removeEventListener("scroll", autoStartMusicOnScroll);
+    };
+
+    const autoStartTimer = window.setTimeout(() => {
+      if (!audioStartedRef.current) {
+        void startMusic();
+      }
+    }, 2500);
+
+    window.addEventListener("scroll", autoStartMusicOnScroll, { once: true });
+
+    return () => {
+      window.clearTimeout(autoStartTimer);
+      window.removeEventListener("scroll", autoStartMusicOnScroll);
+    };
+  }, []);
 
   const startMusic = async () => {
     const audio = audioRef.current;
@@ -360,8 +392,8 @@ const Invitation = () => {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body, #root { width: 100%; }
 
-        html { scroll-behavior: smooth; overflow-x: hidden; }
-        body { overflow-x: hidden; width: 100vw; max-width: 100%; }
+        html { scroll-behavior: smooth; overflow-y: scroll; overflow-x: hidden; }
+        body { width: 100%; }
 
         @keyframes artReveal {
           from {
@@ -689,69 +721,8 @@ const Invitation = () => {
                   return elements;
                 })}
               </div>
-
-              <p
-                style={{
-                  ...styles.countdownNote,
-                  ...getRevealStyles("countdown", visibleSections, 6),
-                }}
-              >
-                {currentCopy.countdownNote}
-              </p>
-
-              <div
-                style={{
-                  ...styles.uploadCard,
-                  ...getRevealStyles("countdown", visibleSections, 7),
-                }}
-              >
-                <h3 style={styles.uploadHeading}>
-                  {currentCopy.uploadHeading}
-                </h3>
-                <p style={styles.uploadDescription}>
-                  {currentCopy.uploadDescription}
-                </p>
-
-                <div style={styles.uploadActions}>
-                  <button
-                    type="button"
-                    onClick={openPhotosAlbum}
-                    style={styles.photosButton}
-                  >
-                    {currentCopy.photosButtonLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openVideosAlbum}
-                    style={styles.photosButton}
-                  >
-                    {currentCopy.videosButtonLabel}
-                  </button>
-                </div>
-              </div>
             </div>
           </section>
-
-          {/* Photo Section */}
-          {/* <section
-            ref={(node) => {
-              sectionRefs.current.photo = node;
-            }}
-            data-section="photo"
-            style={{
-              ...styles.photoSection,
-              ...getRevealStyles("photo", visibleSections, 0),
-            }}
-          >
-            <div style={styles.photoOverlay}>
-              <img
-                src={publicAssets.handsPhoto}
-                alt="Hands photo"
-                style={styles.photoImage}
-              />
-              <div style={styles.photoShade} />
-            </div>
-          </section> */}
 
           {/* Details Section */}
           <section
@@ -851,13 +822,13 @@ const Invitation = () => {
                   <br />
                   {currentCopy.dateText[1]}
                 </span>
-                <button
+                {/* <button
                   type="button"
                   style={styles.detailButton}
                   onClick={addCalendarReminder}
                 >
                   {currentCopy.calendarButtonLabel}
-                </button>
+                </button> */}
               </div>
             </div>
           </section>
@@ -960,7 +931,58 @@ const Invitation = () => {
                 }}
               >
                 {currentCopy.giftText}
+                <span style={styles.giftHeart}>♥</span>
               </p>
+            </div>
+          </section>
+
+          {/* upload Section */}
+          <section
+            ref={(node) => {
+              sectionRefs.current.upload = node;
+            }}
+            data-section="upload"
+            style={{
+              ...styles.section,
+              ...getRevealStyles("upload", visibleSections, 0),
+            }}
+          >
+            <div
+              style={{
+                ...styles.storyContainer,
+                ...getRevealStyles("upload", visibleSections, 1),
+              }}
+            >
+              <div
+                style={{
+                  ...styles.uploadCard,
+                  ...getRevealStyles("upload", visibleSections, 7),
+                }}
+              >
+                <h3 style={styles.uploadHeading}>
+                  {currentCopy.uploadHeading}
+                </h3>
+                <p style={styles.uploadDescription}>
+                  {currentCopy.uploadDescription}
+                </p>
+
+                <div style={styles.uploadActions}>
+                  <button
+                    type="button"
+                    onClick={openPhotosAlbum}
+                    style={styles.photosButton}
+                  >
+                    {currentCopy.photosButtonLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openVideosAlbum}
+                    style={styles.photosButton}
+                  >
+                    {currentCopy.videosButtonLabel}
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -989,7 +1011,6 @@ const styles: Record<string, CSSProperties> = {
     color: "#5a4a47",
     backgroundColor: "#f5ede8",
     width: "100%",
-    overflow: "hidden",
   },
   heroSection: {
     position: "relative",
@@ -1196,7 +1217,6 @@ const styles: Record<string, CSSProperties> = {
     margin: "25px 8px 0",
   },
   countdownNote: {
-    marginTop: "22px",
     fontSize: "0.96rem",
     lineHeight: 1.7,
     color: "#6a5a52",
@@ -1206,8 +1226,7 @@ const styles: Record<string, CSSProperties> = {
     marginRight: "auto",
   },
   uploadCard: {
-    marginTop: "24px",
-    padding: "28px 24px",
+    padding: "38px 34px",
     borderRadius: "28px",
     backgroundColor: "rgba(255, 250, 247, 0.8)",
     border: "1px solid rgba(123, 75, 47, 0.16)",
@@ -1221,14 +1240,14 @@ const styles: Record<string, CSSProperties> = {
     fontSize: "2rem",
     fontWeight: 700,
     color: "#3d2f2a",
-    marginBottom: "18px",
+    marginBottom: "28px",
     fontFamily: "'Quattrocento', serif",
   },
   uploadDescription: {
-    fontSize: "0.95rem",
+    fontSize: "0.85rem",
     lineHeight: 1.7,
     color: "#6a5a52",
-    marginBottom: "24px",
+    marginBottom: "34px",
     fontFamily: "'Roboto Mono', monospace",
   },
   uploadActions: {
@@ -1380,7 +1399,7 @@ const styles: Record<string, CSSProperties> = {
     backgroundSize: "100% 100%",
     backgroundPosition: "center",
     borderRadius: "30px",
-    minHeight: "540px",
+    minHeight: "500px",
     display: "grid",
     alignItems: "start",
     gap: "4px",
@@ -1420,7 +1439,7 @@ const styles: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "4px",
+    gap: "8px",
     textAlign: "center",
   },
   detailIcon: {
@@ -1456,7 +1475,7 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: "0 10px 24px rgba(123, 75, 47, 0.22)",
     transition: "transform 180ms ease, box-shadow 180ms ease",
     animation: "floatLift 2.4s ease-in-out infinite",
-    marginTop: "15px",
+    marginTop: "25px",
   },
   divider: {
     width: "100%",
@@ -1475,6 +1494,12 @@ const styles: Record<string, CSSProperties> = {
     color: "#6a5a52",
     marginBottom: "20px",
     fontFamily: "'Roboto Mono', monospace",
+  },
+  giftHeart: {
+    color: countdownAccent,
+    marginLeft: "0.35rem",
+    fontSize: "1.25rem",
+    display: "inline-block",
   },
   presenceText: {
     fontSize: "0.95rem",

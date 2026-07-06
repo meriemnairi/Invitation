@@ -390,10 +390,11 @@ const Invitation = () => {
       />
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body, #root { width: 100%; }
+        html, body, #root { width: 100%; min-width: 100%; overflow-x: hidden; }
 
-        html { scroll-behavior: smooth; overflow-y: scroll; overflow-x: hidden; }
-        body { width: 100%; }
+        html { scroll-behavior: smooth; overflow-y: scroll; }
+        body { width: 100%; overflow-x: hidden; }
+        main { width: 100%; overflow-x: hidden; }
 
         @keyframes artReveal {
           from {
@@ -1104,7 +1105,7 @@ const styles: Record<string, CSSProperties> = {
   },
 
   section: {
-    padding: "90px 40px",
+    padding: "60px 40px",
     maxWidth: "1200px",
     margin: "0 auto",
     borderBottom: "1px solid #e8dcd8",
@@ -1492,7 +1493,6 @@ const styles: Record<string, CSSProperties> = {
     fontSize: "0.95rem",
     lineHeight: "1.7",
     color: "#6a5a52",
-    marginBottom: "20px",
     fontFamily: "'Roboto Mono', monospace",
   },
   giftHeart: {

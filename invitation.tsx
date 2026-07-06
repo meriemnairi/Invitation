@@ -943,23 +943,10 @@ const Invitation = () => {
               sectionRefs.current.upload = node;
             }}
             data-section="upload"
-            style={{
-              ...styles.section,
-              ...getRevealStyles("upload", visibleSections, 0),
-            }}
+            style={styles.section}
           >
-            <div
-              style={{
-                ...styles.storyContainer,
-                ...getRevealStyles("upload", visibleSections, 1),
-              }}
-            >
-              <div
-                style={{
-                  ...styles.uploadCard,
-                  ...getRevealStyles("upload", visibleSections, 7),
-                }}
-              >
+            <div style={styles.storyContainer}>
+              <div style={styles.uploadCard}>
                 <h3 style={styles.uploadHeading}>
                   {currentCopy.uploadHeading}
                 </h3>
